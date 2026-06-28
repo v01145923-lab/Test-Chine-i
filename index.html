@@ -1,0 +1,151 @@
+ <meta charset="UTF-8">
+  <title>Китайский: цифры</title>
+  <style>
+    body { font-family: sans-serif; background: #fff8e1; display: flex; justify-content: center; padding-top: 40px; }
+    .box { background: white; padding: 25px; border-radius: 10px; width: 90%; max-width: 450px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    h2 { color: #d35f5f; }
+    p { color: #555; font-size: 18px; line-height: 1.5; }
+    input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #ccc; border-radius: 6px; text-align: center; }
+    button { width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; margin: 5px 0; }
+    button:hover { background: #2980b9; }
+    .hide { display: none; }
+    .opts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 15px 0; }
+    .opt-btn { padding: 10px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 5px; }
+    .opt-btn.active { background: #e3f2fd; border-color: #3498db; }
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <!-- Вопрос -->
+  <div id="q">
+    <h2>Вопрос <span id="n">1</span>/10</h2>
+    <p id="t">Текст задания</p>
+
+    <input id="a" class="hide" placeholder="Твой ответ">
+    <div id="opts" class="opts-grid hide"></div>
+
+    <button id="checkBtn" onclick="check()">Готово</button>
+    <div id="msg" style="margin-top:10px;"></div>
+  </div>
+
+  <!-- Правильный ответ -->
+  <div id="ans" class="hide">
+    <p>Правильный ответ:</p>
+    <p style="font-weight:bold;color:#2ecc71;font-size:20px;" id="cor"></p>
+    <button onclick="next()">Дальше →</button>
+  </div>
+
+  <!-- Финал -->
+  <div id="end" class="hide">
+    <h2>🎉 Молодец! 🎉</h2>
+    <p style="font-size:20px;">Твой счёт: <span id="s" style="color:#d35f5f;font-weight:bold;">0</span> из 10</p>
+    <button onclick="location.reload()">Ещё раз</button>
+  </div>
+</div>
+
+<script>
+  const qs = [
+    // 2 вопроса на слова
+    { t: "Как сказать «Привет»?", type: "input", a: "ni hao" },
+    { t: "Что значит «xie xie»?", type: "input", a: "спасибо" },
+
+    // 3 вопроса на цифры (кнопки)
+    { t: "Выбери: «один» — это…", type: "choice", opts: ["yi", "er", "san"], a: "yi" },
+    { t: "Нажми на «два»", type: "choice", opts: ["yi", "er", "wu"], a: "er" },
+    { t: "Выбери «пять»", type: "choice", opts: ["san", "si", "wu"], a: "wu" },
+
+    // 5 вопросов на цифры (разные)
+    { t: "Как будет «три»? Напиши пиньинь", type: "input", a: "san" },
+    { t: "Допиши: yi ___ san (1, 2, 3)", type: "fill", a: "er" },
+    { t: "Выбери правильный пиньинь для «шесть»", type: "choice", opts: ["wu", "liu", "qi"], a: "liu" },
+    { t: "Что значит «shi»?", type: "input", a: "десять" },
+    { t: "Выбери «восемь»", type: "choice", opts: ["qi", "ba", "jiu"], a: "ba" }
+  ];
+
+  let i = 0, sc = 0;
+  let selectedOpt = "";
+
+  function load() {
+    document.getElementById('q').classList.remove('hide');
+    document.getElementById('ans').classList.add('hide');
+    document.getElementById('end').classList.add('hide');
+
+    const data = qs[i];
+    document.getElementById('n').innerText = i + 1;
+    document.getElementById('t').innerText = data.t;
+
+    const inp = document.getElementById('a');
+    const opts = document.getElementById('opts');
+    inp.classList.add('hide'); inp.value = '';
+    opts.innerHTML = ''; opts.classList.add('hide');
+    document.getElementById('msg').innerText = '';
+
+    if (data.type === "input" || data.type === "fill") {
+      inp.classList.remove('hide');
+      inp.placeholder = data.type === "fill" ? "Впиши слово" : "Напиши ответ";
+      document.getElementById('checkBtn').innerText = "Готово";
+      inp.focus();
+    } else if (data.type === "choice") {
+      data.opts.forEach(o => {
+        const b = document.createElement('button');
+        b.className = 'opt-btn';
+        b.innerText = o;
+        b.onclick = () => {
+          selectedOpt = o;
+          document.querySelectorAll('.opt-btn').forEach(bb => bb.classList.remove('active'));
+          b.classList.add('active');
+        };
+        opts.appendChild(b);
+      });
+      opts.classList.remove('hide');
+      document.getElementById('checkBtn').innerText = "Выбрать ответ";
+    }
+  }
+
+  function check() {
+    const data = qs[i];
+    const m = document.getElementById('msg');
+    let u = "";
+
+    if (data.type === "input" || data.type === "fill") {
+      u = document.getElementById('a').value.trim().toLowerCase();
+    } else {
+      u = selectedOpt;
+    }
+
+    if (u === data.a) {
+      sc++;
+      m.innerText = "Правильно! Молодец! 👍";
+      m.style.color = "#2ecc71";
+    } else {
+      m.innerText = "Не совсем… давай посмотрим правильный вариант.";
+      m.style.color = "#e74c3c";
+    }
+
+    document.getElementById('q').classList.add('hide');
+    document.getElementById('ans').classList.remove('hide');
+    document.getElementById('cor').innerText = data.a;
+  }
+
+  function next() {
+    i++;
+    if (i < qs.length) load();
+    else {
+      document.getElementById('ans').classList.add('hide');
+      document.getElementById('end').classList.remove('hide');
+      document.getElementById('s').innerText = sc;
+    }
+  }
+
+  load();
+</script>
+
+</body>
+</html>
+
+
+
+
+</body>
+</html>
